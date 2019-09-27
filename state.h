@@ -29,7 +29,7 @@ extern volatile int dummy;
 #define MOTOR_ON_BIT        0x02
 #define HOMED_BIT           0x01
 
-struct motorState {
+typedef struct {
   uint8  stateByte;
   int16  targetPos;
   uint16 targetSpeed;
@@ -54,19 +54,20 @@ struct motorState {
   bool   resetAfterSoftStop;
   bool   nextStateSpecialVal; // return homeTestPos or lim sw on next read
   int16  homeTestPos;         // pos when limit sw closes
-};
+  bool   haveLimit;
+} motorState;
 
-extern struct motorState mState[NUM_MOTORS];
+extern motorState *mState;
 
-#define haveError() (errorIntCode || (ms->stateByte & ERR_CODE))
+#define haveError() (errorIntCode || (mState->stateByte & ERR_CODE))
 
 extern volatile uint8 errorIntMot;
 extern volatile uint8 errorIntCode;
 
 void  setStateBit(uint8 mask, uint8 set);
 void  setError(uint8 err);
-void  setErrorInt(uint8 motorIdx, uint8 err);
-void  clrErrorInt(uint8 motorIdx);
+void  setErrorInt(uint8 err);
+void  clrErrorInt(void);
 
 #endif	/* STATE_H */
 

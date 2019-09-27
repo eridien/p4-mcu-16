@@ -2,6 +2,7 @@
 wsl
 cd /mnt/c/Users/19493/dev/p4-mcu-16
 git commit -a -m "" && git push origin master && echo && git status
+git status
 */
 
 // PIC24F16KL401 Configuration Bit Settings
@@ -52,24 +53,12 @@ git commit -a -m "" && git push origin master && echo && git status
 #include "dist-table.h"
 
 int main(void) {
- _RCDIV  = 0; // switch instruction clock from 4 MHz to 8 MHz
- ANSA    = 0;   // no analog inputs
- ANSB    = 0;
+  _RCDIV  = 0;   // switch instruction clock from 4 MHz to 8 MHz
+  ANSA    = 0;   // no analog inputs
+  ANSB    = 0;
 
- setI2cId();  // read mcu number before pin set to output
+  setMcuLoc();   // read mcu number before pins set to output
  
-#ifdef DEBUG
- tp1TRIS = 0;
- tp2TRIS = 0;
- tp3TRIS = 0;
-// tp4TRIS = 0;   part of i2c
- 
- tp1LAT  = 0;
- tp2LAT  = 0;
- tp3LAT  = 0;
-// tp4LAT  = 0;
-#endif
-    
   i2cInit();
   clkInit();
   motorInit();
@@ -79,20 +68,15 @@ int main(void) {
   
   // main event loop -- never ends
   while(true) {
-    // motorIdx, ms, and sv are globals
-    for(motorIdx=0; motorIdx < NUM_MOTORS; motorIdx++) {
-      ms = &mState[motorIdx];      // state array
-      sv = &(mSet[motorIdx].val);  // settings array
-      if(errorIntCode && errorIntMot == motorIdx) {
-        // error happened during interrupt
-        setError(errorIntCode);
-        errorIntCode = 0;
-      }
-      if(ms->haveCommand) {
-        processCommand();
-        ms->haveCommand = false;
-      }
-      checkAll();  // foreground event loop
-   }
+    if(errorIntCode) {
+      // error happened during interrupt
+      setError(errorIntCode);
+      errorIntCode = 0;
+    }
+    if(mState->haveCommand) {
+      processCommand();
+      mState->haveCommand = false;
+    }
+    checkAll();  // foreground event loop
   }
 }

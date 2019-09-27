@@ -6,22 +6,9 @@
 #include "types.h"
 #include "pins.h"
 
-#define NUM_MOTORS 4
-
 #define DEF_MCU_CLK 30
 
-// globals for use in main event loop
-extern uint8                   motorIdx;
-extern struct motorState      *ms;
-extern struct motorSettings   *sv;
-
-#define setBiStepLo()           *stepPort[motorIdx] &= ~stepMask[motorIdx]
-#define setBiStepHiInt(_motIdx) *stepPort[_motIdx]  |=  stepMask[_motIdx]
-#define resetIsLo()          ((*resetPort[motorIdx] &   resetMask[motorIdx]) == 0)
-#define setResetLo()           *resetPort[motorIdx] &= ~resetMask[motorIdx]
-#define setResetHi()           *resetPort[motorIdx] |=  resetMask[motorIdx]
-
-extern bool haveSettings[NUM_MOTORS];
+extern bool haveSettings;
 
 // constants loadable from command (all are 16 bits))
 struct motorSettings {
@@ -58,16 +45,16 @@ union settingsUnion{
   uint16 reg[NUM_SETTING_WORDS];
   struct motorSettings val;
 };
-extern union settingsUnion mSet[NUM_MOTORS];
+extern union settingsUnion mSet;
 
-extern volatile uint16 *stepPort[NUM_MOTORS];
-extern const    uint16  stepMask[NUM_MOTORS];
+extern volatile uint16 *stepPort;
+extern const    uint16  stepMask;
 
-extern volatile uint16 *resetPort[NUM_MOTORS];
-extern const    uint16  resetMask[NUM_MOTORS];
+extern volatile uint16 *resetPort;
+extern const    uint16  resetMask;
 
-extern volatile uint16 *faultPort[NUM_MOTORS];
-extern const    uint16  faultMask[NUM_MOTORS];
+extern volatile uint16 *faultPort;
+extern const    uint16  faultMask;
 
 void motorInit(void);
 void checkAll(void);

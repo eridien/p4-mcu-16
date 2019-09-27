@@ -7,22 +7,30 @@
 #include "state.h"
 #include "motor.h"
 
-uint8 i2cAddrBase; 
-
-volatile uint8 i2cRecvBytes[NUM_MOTORS][RECV_BUF_SIZE+1]; // added len byte
+volatile uint8 i2cRecvBytes[RECV_BUF_SIZE+1]; // added len byte
 volatile uint8 i2cRecvBytesPtr;
 volatile uint8 i2cSendBytes[NUM_SEND_BYTES];
 volatile uint8 i2cSendBytesPtr;
 volatile bool  inPacket;
 volatile bool  packetForUs;
 
+uint8 i2cAddrBase; 
+uint8 mcuLoc;
+
 // must be run before RA0/RA1 tristate turned off
-void setI2cId(void) {
+void setMcuLoc(void) {
   IDTRIS0  = 1;            // MCU ID 0 (ms1))
   IDTRIS1  = 1;            // MCU ID 1 (ms2))
-  if(IDPORT0 == 0)      i2cAddrBase = I2C_ADDR_1;
-  else if(IDPORT1 == 0) i2cAddrBase = I2C_ADDR_2;
-  else                  i2cAddrBase = I2C_ADDR_0;
+  if(IDPORT0 == 0) {
+    mcuLoc = LOC_X;
+    i2cAddrBase = I2C_ADDR_X;
+  } else if(IDPORT1 == 0) {
+    mcuLoc = LOC_HEAD;
+    i2cAddrBase = I2C_ADDR_HEAD;
+  } else {
+    mcuLoc = LOC_BASE;
+    i2cAddrBase = I2C_ADDR_BASE;
+  }
 }
 
 void i2cInit() { 
@@ -62,7 +70,7 @@ void setSendBytesInt() {
       i2cSendBytes[2] = limLAT;
       break;      
     default: 
-      setErrorInt(motIdx, CMD_DATA_ERROR);
+      setErrorInt(CMD_DATA_ERROR);
   }
   mState->nextStateSpecialVal = 0;
 }
@@ -86,20 +94,20 @@ void __attribute__ ((interrupt,shadow,auto_psv)) _MSSP1Interrupt(void) {
     inPacket = false;
     if(packetForUs) {
       if (I2C_SSPOV) {
-        setErrorInt(motIdxInPacket, OVERFLOW_ERROR);
+        setErrorInt(OVERFLOW_ERROR);
         I2C_SSPOV = 0;   // clear SSPOV
       }
       else {
         if(!RdNotWrite) {
           // done receiving -- total length of recv is stored in first byte
-          i2cRecvBytes[motIdxInPacket][0] = i2cRecvBytesPtr-1;
+          i2cRecvBytes[0] = i2cRecvBytesPtr-1;
           // tell event loop that data is available
-          mState[motIdxInPacket].haveCommand = true;
+          mState->haveCommand = true;
         } else {
           // sent last byte of status packet
           if(i2cSendBytes[0] & ERR_CODE) {
             // master just read status with error code, clear it
-            setErrorInt(motIdxInPacket, CLEAR_ERROR);
+            setErrorInt(CLEAR_ERROR);
           }
         }
       }
@@ -120,13 +128,13 @@ void __attribute__ ((interrupt,shadow,auto_psv)) _MSSP1Interrupt(void) {
     else {
       if(!RdNotWrite) {
         // received byte (i2c write to slave)
-        if (mState[motIdxInPacket].haveCommand != 0) {
+        if (mState->haveCommand != 0) {
             // last command for this motor not handled yet by event loop
-            setErrorInt(motIdxInPacket, OVERFLOW_ERROR);
+            setErrorInt(OVERFLOW_ERROR);
         }
         else {
           if(i2cRecvBytesPtr < RECV_BUF_SIZE + 1) 
-            i2cRecvBytes[motIdxInPacket][i2cRecvBytesPtr++] = I2C_BUF_BYTE;
+            i2cRecvBytes[i2cRecvBytesPtr++] = I2C_BUF_BYTE;
         }
       }
       else {

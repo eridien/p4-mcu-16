@@ -21,17 +21,26 @@
 
 // motor is bottom 2 bits in addr
 // addr is set based on ID input pins
+extern uint8 mcuLoc;
+#define LOC_BASE 0
+#define LOC_X    1
+#define LOC_HEAD 2
+
+#define MCU_BASE (mcuLoc == LOC_BASE)
+#define MCU_X    (mcuLoc == LOC_X   )
+#define MCU_HEAD (mcuLoc == LOC_HEAD)
+
 extern uint8 i2cAddrBase; 
-#define I2C_ADDR_0   0x08  // real addr: 0x04+motor (base mcu)
-#define I2C_ADDR_1   0x10  // real addr: 0x08+motor (   X mcu)
-#define I2C_ADDR_2   0x18  // real addr: 0x0c+motor (head mcu)
+#define I2C_ADDR_BASE   0x08  // real addr: 0x04+motor (base mcu)
+#define I2C_ADDR_X   0x10  // real addr: 0x08+motor (   X mcu)
+#define I2C_ADDR_HEAD   0x18  // real addr: 0x0c+motor (head mcu)
 
 extern volatile uint8 i2cRecvBytes[RECV_BUF_SIZE + 1];
 extern volatile uint8 i2cRecvBytesPtr;
 extern volatile uint8 i2cSendBytes[NUM_SEND_BYTES];
 extern volatile uint8 i2cSendBytesPtr;
 
-void setI2cId(void);
+void setMcuLoc(void);
 void i2cInit(void);
 void i2cInterrupt(void);
 
