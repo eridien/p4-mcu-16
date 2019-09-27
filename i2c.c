@@ -16,10 +16,13 @@ volatile uint8 i2cSendBytesPtr;
 volatile bool  inPacket;
 volatile bool  packetForUs;
 
-// must be run before RA0 tristate turned off
+// must be run before RA0/RA1 tristate turned off
 void setI2cId(void) {
-  IDTRIS  = 1;  // MCU ID pin, 0 for MCU0 (mcuA in p3), 1 for MCU1 (mcuB in p3)
-  i2cAddrBase = (IDPORT ? I2C_ADDR_1 : I2C_ADDR_0);  
+  IDTRIS0  = 1;            // MCU ID 0 (ms1))
+  IDTRIS1  = 1;            // MCU ID 1 (ms2))
+  if(IDPORT0 == 0)      i2cAddrBase = I2C_ADDR_1;
+  else if(IDPORT1 == 0) i2cAddrBase = I2C_ADDR_2;
+  else                  i2cAddrBase = I2C_ADDR_0;
 }
 
 void i2cInit() { 
@@ -41,31 +44,27 @@ void i2cInit() {
 }
 
 // all words are big-endian
-void setSendBytesInt(uint8 motIdx) {
-  struct motorState *p = &mState[motIdx];
-  switch (p->nextStateSpecialVal) {
+void setSendBytesInt() {
+  switch (mState->nextStateSpecialVal) {
     case 0:
-      i2cSendBytes[0] = (MCU_VERSION | p->stateByte);
-      i2cSendBytes[1] =  p->curPos >> 8;
-      i2cSendBytes[2] =  p->curPos & 0x00ff;   
+      i2cSendBytes[0] = (MCU_VERSION | mState->stateByte);
+      i2cSendBytes[1] =  mState->curPos >> 8;
+      i2cSendBytes[2] =  mState->curPos & 0x00ff;   
       break;
     case 1: 
       i2cSendBytes[0] = (MCU_VERSION | AUX_RES_BIT | 0);
-      i2cSendBytes[1] = p->homeTestPos >> 8;
-      i2cSendBytes[2] = p->homeTestPos & 0x00ff;
+      i2cSendBytes[1] = mState->homeTestPos >> 8;
+      i2cSendBytes[2] = mState->homeTestPos & 0x00ff;
       break;        
     case 2: 
       i2cSendBytes[0] = (MCU_VERSION | AUX_RES_BIT | 1);
       i2cSendBytes[1] = 0; 
-      volatile uint16 *lp = p->limitPort;
-      i2cSendBytes[2] = (lp ? !(*(lp) & p->limitMask) ^ 
-                             !!(mSet[motIdx].val.limitSwCtl & LIM_POL_MASK)
-        : 0);
+      i2cSendBytes[2] = limLAT;
       break;      
     default: 
       setErrorInt(motIdx, CMD_DATA_ERROR);
   }
-  p->nextStateSpecialVal = 0;
+  mState->nextStateSpecialVal = 0;
 }
 
 volatile uint8 motIdxInPacket;

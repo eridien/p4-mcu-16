@@ -60,7 +60,7 @@ void motorInit() {
   faultATRIS = 1; // zero input means motor fault
   faultBTRIS = 1; 
   faultCTRIS = 1;  
-  faultDTRIS = 1;  
+//  faultDTRIS = 1;  
 #endif
   
   limATRIS = 1; // limit switch input
@@ -71,7 +71,7 @@ void motorInit() {
   uint8 motIdx;
   for (motIdx = 0; motIdx < NUM_MOTORS; motIdx++) {
     haveSettings[motIdx] = false;
-    struct motorState *msp = &mState[motIdx];
+    struct motorState *msp = &mState;
     msp->stateByte = 0; // no err, not busy, motor off, and not homed
     msp->phase = 0; // cur step phase
     msp->haveCommand = false;
@@ -350,7 +350,7 @@ void __attribute__((interrupt, shadow, auto_psv)) _T1Interrupt(void) {
   timeTicks++;
   int motIdx;
   for (motIdx = 0; motIdx < NUM_MOTORS; motIdx++) {
-    struct motorState *p = &mState[motIdx];
+    struct motorState *p = &mState;
     if (p->stepPending && p->nextStepTicks == timeTicks) {
       if (p->stepped) {
         // last motor step not handled yet

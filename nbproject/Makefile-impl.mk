@@ -27,11 +27,11 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 PROJECTNAME=p4-mcu-16
 
 # Active Configuration
-DEFAULTCONF=mcuA
+DEFAULTCONF=default
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=mcuAB mcuA mcuB 
+ALLCONFS=default 
 
 
 # build
@@ -45,17 +45,13 @@ ALLCONFS=mcuAB mcuA mcuB
 
 # clobber
 .clobber-impl: .clobber-pre .depcheck-impl
-	    ${MAKE} SUBPROJECTS=${SUBPROJECTS} CONF=mcuAB clean
-	    ${MAKE} SUBPROJECTS=${SUBPROJECTS} CONF=mcuA clean
-	    ${MAKE} SUBPROJECTS=${SUBPROJECTS} CONF=mcuB clean
+	    ${MAKE} SUBPROJECTS=${SUBPROJECTS} CONF=default clean
 
 
 
 # all
 .all-impl: .all-pre .depcheck-impl
-	    ${MAKE} SUBPROJECTS=${SUBPROJECTS} CONF=mcuAB build
-	    ${MAKE} SUBPROJECTS=${SUBPROJECTS} CONF=mcuA build
-	    ${MAKE} SUBPROJECTS=${SUBPROJECTS} CONF=mcuB build
+	    ${MAKE} SUBPROJECTS=${SUBPROJECTS} CONF=default build
 
 
 

@@ -1,7 +1,8 @@
-
-//  wsl
-//  cd /mnt/c/Users/19493/dev/p4-mcu-16
-//  git commit -a -m "" && git push origin master && echo && git status
+/*
+wsl
+cd /mnt/c/Users/19493/dev/p4-mcu-16
+git commit -a -m "" && git push origin master && echo && git status
+*/
 
 // PIC24F16KL401 Configuration Bit Settings
 
