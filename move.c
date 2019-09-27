@@ -23,23 +23,23 @@ void checkMotor() {
   bool  decelerate = false;
   bool  closing    = false;
   
-  if(mState->homing) {
+  if(homing) {
     if (mSet.val.accelIdx == 0 || 
-        mState->curSpeed <= mSet.val.jerk) {
-      mState->curSpeed = mState->targetSpeed;
-      mState->curDir   = mState->targetDir;
+        curSpeed <= mSet.val.jerk) {
+      curSpeed = targetSpeed;
+      curDir   = targetDir;
     }
     else {
       decelerate = true;
     }
   }
-  else if(mState->stopping) {
+  else if(stopping) {
     decelerate = true;
   }
   else {
     // normal move to target position
 
-    int16 distRemaining = (mState->targetPos - mState->curPos);
+    int16 distRemaining = (targetPos - curPos);
     bool  distRemPositive = (distRemaining >= 0);
     if(!distRemPositive) {
       distRemaining = -distRemaining;
@@ -59,46 +59,46 @@ void checkMotor() {
     else {
       if (mSet.val.accelIdx == 0) {
         // not using acceleration
-        mState->curSpeed = mState->targetSpeed;
-        mState->curDir   = mState->targetDir = (mState->targetPos > mState->curPos);
+        curSpeed = targetSpeed;
+        curDir   = targetDir = (targetPos > curPos);
       }
       else {
         // using acceleration
-        if (mState->curSpeed <= mSet.val.jerk) {
+        if (curSpeed <= mSet.val.jerk) {
           // going slower than accel threshold
           
-          if(mState->curPos == mState->targetPos) {
+          if(curPos == targetPos) {
             // finished normal move
             stopStepping();
             return;
           }
           // can chg dir any time when slow
-          mState->curDir = mState->targetDir = distRemPositive;
+          curDir = targetDir = distRemPositive;
         }
         
         // going faster than accel threshold
-        else if(mState->slowing) {
+        else if(slowing) {
           decelerate = true;
         }
         else {
-          if(mState->curDir != mState->targetDir) {
+          if(curDir != targetDir) {
             // we need to chg dir but we are going too fast
             decelerate = true;
           }
           else {
             // look up decel dist target
-            uint16 distTgt = calcDist(mSet.val.accelIdx, mState->curSpeed);
+            uint16 distTgt = calcDist(mSet.val.accelIdx, curSpeed);
             if(distRemaining < distTgt) {
               decelerate = true;
-              mState->slowing = true;
+              slowing = true;
             }
           }
         }
         if(!decelerate && !accelerate && !closing) {
-          if(mState->curSpeed > mState->targetSpeed) {
+          if(curSpeed > targetSpeed) {
             decelerate = true;
           }
-          else if(!mState->slowing && mState->curSpeed < mState->targetSpeed) {
+          else if(!slowing && curSpeed < targetSpeed) {
             accelerate = true;
           }
         }
@@ -107,24 +107,24 @@ void checkMotor() {
   }
   if(decelerate) {
     // accel/step = accel/sec / steps/sec
-    uint16 deltaSpeed = ((uint32) mState->acceleration * 8) / mState->curSpeed;
+    uint16 deltaSpeed = ((uint32) acceleration * 8) / curSpeed;
     if(deltaSpeed == 0) deltaSpeed = 1;
-    if(mState->curSpeed >= deltaSpeed) {
-      mState->curSpeed -= deltaSpeed;
+    if(curSpeed >= deltaSpeed) {
+      curSpeed -= deltaSpeed;
     } 
     else {
-      mState->curSpeed = mSet.val.jerk;
+      curSpeed = mSet.val.jerk;
     }
   }
   else if (accelerate) {
     // accel/step = accel/sec / steps/sec
-   uint16 deltaSpeed = ((uint32) mState->acceleration * 8) / mState->curSpeed;
+   uint16 deltaSpeed = ((uint32) acceleration * 8) / curSpeed;
    if(deltaSpeed == 0) deltaSpeed = 1;
-    mState->curSpeed += deltaSpeed;
-    if(mState->curSpeed > mState->targetSpeed) {
+    curSpeed += deltaSpeed;
+    if(curSpeed > targetSpeed) {
       // we just passed target speed
       // we should never go faster than target speed
-      mState->curSpeed = mState->targetSpeed;
+      curSpeed = targetSpeed;
     }
   }
   uint16 clkTicks;
@@ -133,15 +133,15 @@ void checkMotor() {
     uint8 tgtUstep;
     // we want pps to be between 750 and 1500, if possible
     // low pps gives sw more time to keep up
-    if      (mState->curSpeed > (8192 + 4096) / 2) tgtUstep = 0;
-    else if (mState->curSpeed > (4096 + 2048) / 2) tgtUstep = 1;
-    else if (mState->curSpeed > (2048 + 1024) / 2) tgtUstep = 2;
+    if      (curSpeed > (8192 + 4096) / 2) tgtUstep = 0;
+    else if (curSpeed > (4096 + 2048) / 2) tgtUstep = 1;
+    else if (curSpeed > (2048 + 1024) / 2) tgtUstep = 2;
     else                                       tgtUstep = 3;
 
-    if(tgtUstep != mState->ustep) {
+    if(tgtUstep != ustep) {
       // you can only change ustep when the drv8825 phase is correct
-      if((mState->phase & uStepPhaseMask[tgtUstep]) == 0) {
-        mState->ustep = tgtUstep;
+      if((phase & uStepPhaseMask[tgtUstep]) == 0) {
+        ustep = tgtUstep;
       }
     }
   }
@@ -149,57 +149,57 @@ void checkMotor() {
   // we are closing in (very close to target))
     // if needed, adjust ustep to hit exact position
     // phase is always correct since only decreasing step size
-    int8 dist = mState->targetPos - mState->curPos;
+    int8 dist = targetPos - curPos;
     if(dist < 0) dist = -dist;
-    while(mState->ustep < 3 && uStepDist[mState->ustep] > dist) {
-      mState->ustep++;
+    while(ustep < 3 && uStepDist[ustep] > dist) {
+      ustep++;
     }
   }
-  if(mState->ustep > mSet.val.maxUstep) {
-     mState->ustep = mSet.val.maxUstep;
+  if(ustep > mSet.val.maxUstep) {
+     ustep = mSet.val.maxUstep;
   }
   // set step timing
-  switch (mState->ustep) {
-    case 0:  clkTicks = clkTicksPerSec / (mState->curSpeed >> 3); break;
-    case 1:  clkTicks = clkTicksPerSec / (mState->curSpeed >> 2); break;
-    case 2:  clkTicks = clkTicksPerSec / (mState->curSpeed >> 1); break;
-    case 3:  clkTicks = clkTicksPerSec /  mState->curSpeed      ; break;
+  switch (ustep) {
+    case 0:  clkTicks = clkTicksPerSec / (curSpeed >> 3); break;
+    case 1:  clkTicks = clkTicksPerSec / (curSpeed >> 2); break;
+    case 2:  clkTicks = clkTicksPerSec / (curSpeed >> 1); break;
+    case 3:  clkTicks = clkTicksPerSec /  curSpeed      ; break;
     default: clkTicks = 0; // to avoid compiler warning
   }
 
   bool err;
   disableAllInts;
-  mState->nextStepTicks = mState->lastStepTicks + clkTicks;
+  nextStepTicks = lastStepTicks + clkTicks;
   // modulo 2**16 arithmetic
-  err = (mState->nextStepTicks - (timeTicks+1)) > 32000;
+  err = (nextStepTicks - (timeTicks+1)) > 32000;
   enableAllInts;
-  mState->stepped = false;
+  stepped = false;
   if(err) { 
     // nextStepTicks is in the past
     setError(STEP_NOT_DONE_ERROR); 
   } else {
     stepLAT = 0;
-    mState->stepPending = true;
+    stepPending = true;
   }
 }
 
 void moveCommand(bool noRules) {
-  mState->noBounds = noRules;
+  noBounds = noRules;
   
-  if((mState->stateByte & HOMED_BIT) == 0 && !noRules) {
+  if((stateByte & HOMED_BIT) == 0 && !noRules) {
     setError(NOT_HOMED);
     return;
   }
-  mState->slowing     = false;
-  mState->homing      = false;
-  mState->stopping    = false;
-  mState->targetDir   = (mState->targetPos >= mState->curPos);   
-  if(mState->curSpeed == 0 || (mState->stateByte & BUSY_BIT) == 0) {
+  slowing     = false;
+  homing      = false;
+  stopping    = false;
+  targetDir   = (targetPos >= curPos);   
+  if(curSpeed == 0 || (stateByte & BUSY_BIT) == 0) {
     disableAllInts;
-    mState->lastStepTicks = timeTicks;
+    lastStepTicks = timeTicks;
     enableAllInts;
-    mState->curSpeed = mSet.val.jerk;
-    mState->curDir   = mState->targetDir;
+    curSpeed = mSet.val.jerk;
+    curDir   = targetDir;
   }
   setStateBit(BUSY_BIT, 1);
 }

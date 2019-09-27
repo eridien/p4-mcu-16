@@ -73,9 +73,9 @@ int main(void) {
       setError(errorIntCode);
       errorIntCode = 0;
     }
-    if(mState->haveCommand) {
+    if(haveCommand) {
       processCommand();
-      mState->haveCommand = false;
+      haveCommand = false;
     }
     checkAll();  // foreground event loop
   }

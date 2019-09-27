@@ -29,37 +29,33 @@ extern volatile int dummy;
 #define MOTOR_ON_BIT        0x02
 #define HOMED_BIT           0x01
 
-typedef struct {
-  uint8  stateByte;
-  int16  targetPos;
-  uint16 targetSpeed;
-  bool   targetDir;
-  bool   noBounds;
-  int16  curPos;
-  uint16 curSpeed;
-  bool   curDir;
-  int16  backlashPos; // neg is left of dead zone, >= backlashWid is right
-  uint8  ustep;
-  uint16 acceleration;
-  bool   stepPending;
-  bool   stepped;
-  bool   stopping;
-  bool   homing;
-  uint8  homingState;
-  bool   slowing;
-  uint8  phase;  // bipolar: matches phase inside drv8825, unipolar: step phase
-  uint16 nextStepTicks;
-  uint16 lastStepTicks;
-  bool   haveCommand;
-  bool   resetAfterSoftStop;
-  bool   nextStateSpecialVal; // return homeTestPos or lim sw on next read
-  int16  homeTestPos;         // pos when limit sw closes
-  bool   haveLimit;
-} motorState;
+extern  uint8  stateByte;
+extern  int16  targetPos;
+extern  uint16 targetSpeed;
+extern  bool   targetDir;
+extern  bool   noBounds;
+extern  int16  curPos;
+extern  uint16 curSpeed;
+extern  bool   curDir;
+extern  int16  backlashPos; // neg is left of dead zone, >= backlashWid is right
+extern  uint8  ustep;
+extern  uint16 acceleration;
+extern  bool   stepPending;
+extern  bool   stepped;
+extern  bool   stopping;
+extern  bool   homing;
+extern  uint8  homingState;
+extern  bool   slowing;
+extern  uint8  phase;  // bipolar: matches phase inside drv8825, unipolar: step phase
+extern  uint16 nextStepTicks;
+extern  uint16 lastStepTicks;
+extern  bool   haveCommand;
+extern  bool   resetAfterSoftStop;
+extern  bool   nextStateSpecialVal; // return homeTestPos or lim sw on next read
+extern  int16  homeTestPos;         // pos when limit sw closes
+extern  bool   haveLimit;
 
-extern motorState *mState;
-
-#define haveError() (errorIntCode || (mState->stateByte & ERR_CODE))
+#define haveError() (errorIntCode || (stateByte & ERR_CODE))
 
 extern volatile uint8 errorIntMot;
 extern volatile uint8 errorIntCode;

@@ -8,12 +8,12 @@
 #include "clock.h"
 
 void stopStepping() {
-  mState->stepPending = false;
-  mState->stepped     = false;
-  mState->homing      = false;
-  mState->slowing     = false;
-  mState->stopping    = false;
-  mState->curSpeed    = 0;
+  stepPending = false;
+  stepped     = false;
+  homing      = false;
+  slowing     = false;
+  stopping    = false;
+  curSpeed    = 0;
   setStateBit(BUSY_BIT, 0);
 }
 
@@ -25,25 +25,25 @@ void resetMotor() {
 }
 
 void softStopCommand(bool resetAfter) {
-  mState->slowing            = true;
-  mState->homing             = false;
-  mState->targetDir          = mState->curDir;
-  mState->targetSpeed        = 0;
-  mState->resetAfterSoftStop = resetAfter;
-  if((mState->stateByte & BUSY_BIT) == 0) {
+  slowing            = true;
+  homing             = false;
+  targetDir          = curDir;
+  targetSpeed        = 0;
+  resetAfterSoftStop = resetAfter;
+  if((stateByte & BUSY_BIT) == 0) {
     disableAllInts;
-    mState->lastStepTicks = timeTicks;
+    lastStepTicks = timeTicks;
     enableAllInts;
-    mState->curSpeed = mSet.val.jerk; // triggers shutdown code
+    curSpeed = mSet.val.jerk; // triggers shutdown code
   }
   setStateBit(BUSY_BIT, 1);
-  mState->stopping = true;
+  stopping = true;
 }
 
 void chkStopping() {
-  if(mState->curSpeed <= mSet.val.jerk || mSet.val.accelIdx == 0) {
+  if(curSpeed <= mSet.val.jerk || mSet.val.accelIdx == 0) {
     stopStepping();
-    if(mState->resetAfterSoftStop) {
+    if(resetAfterSoftStop) {
       resetMotor();
     }
     return;

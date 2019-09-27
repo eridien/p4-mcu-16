@@ -10,12 +10,12 @@
 #include "clock.h"
 
 void chkHoming() {
-  switch(mState->homingState) {
+  switch(homingState) {
     case movingToFwdSide:
       if(!limitSwOn()) {
         // start normal homing
-        mState->targetDir = mSet.val.homingDir;
-        mState->homingState = goingHome;
+        targetDir = mSet.val.homingDir;
+        homingState = goingHome;
       }
       break;
             
@@ -24,27 +24,27 @@ void chkHoming() {
         // arrived at switch while homing backward
         // HOMED_BIT not cleared until now, homing might have been interrupted
         setStateBit(HOMED_BIT, false);
-        mState->targetDir   = !mSet.val.homingDir;
-        mState->targetSpeed = mSet.val.homingBackUpSpeed;
-        mState->homingState = homeReversing;
+        targetDir   = !mSet.val.homingDir;
+        targetSpeed = mSet.val.homingBackUpSpeed;
+        homingState = homeReversing;
       }
       break;
       
     case homeReversing:
       if(!limitSwOn()) {
         // passed switch second (or third) time
-        mState->homeTestPos = mState->curPos;
-        mState->curPos      = 0;
-        mState->homingState = homingToOfs;
+        homeTestPos = curPos;
+        curPos      = 0;
+        homingState = homingToOfs;
        }
       break;
     
     case homingToOfs: 
-      if(mSet.val.homingDir ? (mState->curPos <= mSet.val.homeOfs) 
-                       : (mState->curPos >= mSet.val.homeOfs)) {
-        mState->homing = false;
+      if(mSet.val.homingDir ? (curPos <= mSet.val.homeOfs) 
+                       : (curPos >= mSet.val.homeOfs)) {
+        homing = false;
         setStateBit(HOMED_BIT, 1);
-        mState->curPos = mSet.val.homePos;
+        curPos = mSet.val.homePos;
         stopStepping();
         return;
       }
@@ -52,27 +52,27 @@ void chkHoming() {
   }
 }
 void homeCommand(bool start) {
-  mState->slowing = false;
-  if((mState->stateByte & BUSY_BIT) == 0) {
+  slowing = false;
+  if((stateByte & BUSY_BIT) == 0) {
     // not moving -- init speed
     motorOn();
     disableAllInts;
-    mState->lastStepTicks = timeTicks;
+    lastStepTicks = timeTicks;
     enableAllInts;
-    mState->curSpeed = mSet.val.jerk;
+    curSpeed = mSet.val.jerk;
   }
-  if(start && mState->haveLimit) {
-    mState->homing = true;
+  if(start && haveLimit) {
+    homing = true;
     if(limitSwOn()) {
       // go to fwd side of switch at full homing speed
-      mState->homingState = movingToFwdSide;
-      mState->targetDir   = !mSet.val.homingDir;
+      homingState = movingToFwdSide;
+      targetDir   = !mSet.val.homingDir;
     }
     else {
-      mState->homingState = goingHome;
-      mState->targetDir   = mSet.val.homingDir;
+      homingState = goingHome;
+      targetDir   = mSet.val.homingDir;
     }
-    mState->targetSpeed = mSet.val.homingSpeed;
+    targetSpeed = mSet.val.homingSpeed;
     setStateBit(BUSY_BIT,  1);
     // homed sState bit unchanged until we get to limit switch
     //   so homing can be interrupted by move command
@@ -82,7 +82,7 @@ void homeCommand(bool start) {
     // hard stop with no reset
     // set wherever it lands to home pos
     stopStepping();
-    mState->curPos = mSet.val.homePos;
+    curPos = mSet.val.homePos;
     setStateBit(HOMED_BIT, 1);
   }
 }

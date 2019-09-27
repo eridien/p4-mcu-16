@@ -28,12 +28,12 @@ void motorInit() {
   limTRIS   = 1; // limit switch input
 
   haveSettings = false;
-  mState->stateByte = 0; // no err, not busy, motor off, and not homed
-  mState->phase = 0; // cur step phase
-  mState->haveCommand = false;
-  mState->stepPending = false;
-  mState->stepped = false;
-  mState->curSpeed = 0;
+  stateByte = 0; // no err, not busy, motor off, and not homed
+  phase = 0; // cur step phase
+  haveCommand = false;
+  stepPending = false;
+  stepped = false;
+  curSpeed = 0;
 }
 #include "i2c.h" // DEBUG
 
@@ -42,7 +42,7 @@ bool haveFault() {
 }
 
 bool limitSwOn() {
-  return (mState->haveLimit && (limLAT == 0));
+  return (haveLimit && (limLAT == 0));
 }
 
 // setting words are big endian
@@ -54,7 +54,7 @@ void setMotorSettings(uint8 numWordsRecvd) {
     mSet.reg[i] = (i2cRecvBytes[2 * i + 2] << 8) |
                              i2cRecvBytes[2 * i + 3];
   }
-  mState->acceleration = accelTable[mSet.val.accelIdx];
+  acceleration = accelTable[mSet.val.accelIdx];
   setTicksSec();
   clkTicksPerSec = ((uint16) (1000000 / mSet.val.mcuClock));
   haveSettings = true;
@@ -67,57 +67,57 @@ void checkAll() {
     setError(MOTOR_FAULT_ERROR);
     return;
   }
-  if (mState->stepPending) {
+  if (stepPending) {
     return;
   }
-  if (mState->stepped) {
-    mState->stepped = false;
-    uint8 stepDist = uStepDist[mState->ustep];
-    int8  signedDist = ((mState->curDir) ? stepDist : -stepDist); 
-    mState->phase += signedDist;
+  if (stepped) {
+    stepped = false;
+    uint8 stepDist = uStepDist[ustep];
+    int8  signedDist = ((curDir) ? stepDist : -stepDist); 
+    phase += signedDist;
     
     if(mSet.val.backlashWid) {
-      if((mState->backlashPos < 0) && mState->curDir) {
+      if((backlashPos < 0) && curDir) {
         // reversing from backward to forward outside dead zone
-        mState->backlashPos = stepDist;
+        backlashPos = stepDist;
         signedDist -= mSet.val.backlashWid;
         if(signedDist < 0) signedDist = 0;
       }
-      else if((mState->backlashPos >= (int16) mSet.val.backlashWid) && !mState->curDir) {
+      else if((backlashPos >= (int16) mSet.val.backlashWid) && !curDir) {
         // reversing from forward to backward outside dead zone
-        mState->backlashPos = mSet.val.backlashWid - stepDist;
+        backlashPos = mSet.val.backlashWid - stepDist;
         signedDist += mSet.val.backlashWid;
         if(signedDist > 0) signedDist = 0;
       }
-      else if(mState->backlashPos >= 0 && mState->backlashPos < (int16) mSet.val.backlashWid){
+      else if(backlashPos >= 0 && backlashPos < (int16) mSet.val.backlashWid){
         // moving inside backlash dead zone
-        mState->backlashPos += signedDist;
-        if(mState->backlashPos < 0) {
-          signedDist = mState->backlashPos;
+        backlashPos += signedDist;
+        if(backlashPos < 0) {
+          signedDist = backlashPos;
         }
-        else if(mState->backlashPos >= (int16) mSet.val.backlashWid) {
-          signedDist = mState->backlashPos - mSet.val.backlashWid;
+        else if(backlashPos >= (int16) mSet.val.backlashWid) {
+          signedDist = backlashPos - mSet.val.backlashWid;
         }
         else signedDist = 0;
       }
     }
-    mState->curPos += signedDist;
+    curPos += signedDist;
   }
-  if ((mState->stateByte & BUSY_BIT) && !haveError()) {
-    if (mState->homing) {
+  if ((stateByte & BUSY_BIT) && !haveError()) {
+    if (homing) {
       chkHoming();
-    } else if (mState->stopping) {
+    } else if (stopping) {
       chkStopping();
     } else {
       // normal moving
-      if ((mState->curPos < mSet.val.minPos || mState->curPos > mSet.val.maxPos) 
-           && !mState->noBounds) {
+      if ((curPos < mSet.val.minPos || curPos > mSet.val.maxPos) 
+           && !noBounds) {
         setError(BOUNDS_ERROR);
         return;
       }
     }
   }
-  if ((mState->stateByte & BUSY_BIT) && !haveError()) {
+  if ((stateByte & BUSY_BIT) && !haveError()) {
     checkMotor();
   }
 }
@@ -128,7 +128,7 @@ void motorOn() {
     resetLAT = 1;
     // counter in drv8825 is cleared by reset
     // ms->phase always matches internal phase counter in drv8825
-    mState->phase = 0;
+    phase = 0;
   }
 }
 
@@ -154,8 +154,8 @@ void processCommand() {
   if ((firstByte & 0x80) == 0x80) {
     if (lenIs(2, true)) {
       // move command
-      mState->targetSpeed = mSet.val.speed;
-      mState->targetPos = ((int16) (firstByte & 0x7f) << 8) | rb[2];
+      targetSpeed = mSet.val.speed;
+      targetPos = ((int16) (firstByte & 0x7f) << 8) | rb[2];
       moveCommand(false);
     }
   } else if ((firstByte & 0xc0) == 0x40) {
@@ -163,8 +163,8 @@ void processCommand() {
     if (lenIs(3, true)) {
       // changes settings for speed
       mSet.val.speed = (uint16) (firstByte & 0x3f) << 8;
-      mState->targetSpeed = mSet.val.speed;
-      mState->targetPos = (int16) (((uint16) rb[2] << 8) | rb[3]);
+      targetSpeed = mSet.val.speed;
+      targetPos = (int16) (((uint16) rb[2] << 8) | rb[3]);
       moveCommand(false);
     }
   } else if ((firstByte & 0xf8) == 0x08) {
@@ -173,9 +173,9 @@ void processCommand() {
       // changes settings for acceleration and speed
       mSet.val.accelIdx = (firstByte & 0x07);
       mSet.val.speed = (((uint16) rb[2] << 8) | rb[3]);
-      mState->acceleration = accelTable[mSet.val.accelIdx];
-      mState->targetSpeed = mSet.val.speed;
-      mState->targetPos = (int16) (((uint16) rb[4] << 8) | rb[5]);
+      acceleration = accelTable[mSet.val.accelIdx];
+      targetSpeed = mSet.val.speed;
+      targetPos = (int16) (((uint16) rb[4] << 8) | rb[5]);
       moveCommand(false);
     }
   } else if ((firstByte & 0xe0) == 0x20) {
@@ -184,34 +184,34 @@ void processCommand() {
       motorOn();
       uint16 dist = ((( (uint16) firstByte & 0x0f) << 8) | rb[2]);
       // direction bit is in d4
-      if(firstByte & 0x10) mState->targetPos = mState->curPos + dist;
-      else                 mState->targetPos = mState->curPos - dist;
-      mState->acceleration = 0;
-      mState->targetSpeed  = mSet.val.jerk;
+      if(firstByte & 0x10) targetPos = curPos + dist;
+      else                 targetPos = curPos - dist;
+      acceleration = 0;
+      targetSpeed  = mSet.val.jerk;
       moveCommand(true);
     }
   } else if (firstByte == 0x02) {
     // jog command relative - no bounds checking and doesn't need to be homed
     if (lenIs(3, true)) {
       motorOn(); 
-      mState->targetPos    = mState->curPos + (int16) (((uint16) rb[2] << 8) | rb[3]);
-      mState->acceleration = 0;
-      mState->targetSpeed  = mSet.val.jerk;
+      targetPos    = curPos + (int16) (((uint16) rb[2] << 8) | rb[3]);
+      acceleration = 0;
+      targetSpeed  = mSet.val.jerk;
       moveCommand(true);
     }
   } else if (firstByte == 0x03) {
     // jog command relative - no bounds checking and doesn't need to be homed
     if (lenIs(3, true)) {
       motorOn();
-      mState->targetPos    = (int16) (((uint16) rb[2] << 8) | rb[3]);
-      mState->acceleration = 0;
-      mState->targetSpeed  = mSet.val.jerk;
+      targetPos    = (int16) (((uint16) rb[2] << 8) | rb[3]);
+      acceleration = 0;
+      targetSpeed  = mSet.val.jerk;
       moveCommand(true);
     }
   } else if (firstByte == 0x01) {
     // setPos command
     if (lenIs(3, false)) {
-      mState->curPos =  (int16) (((uint16) rb[2] << 8) | rb[3]);
+      curPos =  (int16) (((uint16) rb[2] << 8) | rb[3]);
     }
   } else if (firstByte == 0x1f) {
     // load settings command
@@ -225,7 +225,7 @@ void processCommand() {
   } else if((firstByte & 0xfc) == 0x04) {
    // next status contains special value
     if (lenIs(1, true)) {
-      mState->nextStateSpecialVal = (firstByte & 0x03) + 1;
+      nextStateSpecialVal = (firstByte & 0x03) + 1;
     } else {
       setError(CMD_DATA_ERROR);
     }
@@ -250,18 +250,18 @@ void processCommand() {
 void __attribute__((interrupt, shadow, auto_psv)) _T1Interrupt(void) {
   _T1IF = 0;
   timeTicks++;
-  if (mState->stepPending && mState->nextStepTicks == timeTicks) {
-    if (mState->stepped) {
+  if (stepPending && nextStepTicks == timeTicks) {
+    if (stepped) {
       // last motor step not handled yet
       setErrorInt(STEP_NOT_DONE_ERROR);
       return;
     }
-    ms1LAT = ((mState->ustep & 0x01) ? 1 : 0);
-    ms2LAT = ((mState->ustep & 0x02) ? 1 : 0);
-    dirLAT =   mState->curDir        ? 1 : 0;
+    ms1LAT = ((ustep & 0x01) ? 1 : 0);
+    ms2LAT = ((ustep & 0x02) ? 1 : 0);
+    dirLAT =   curDir        ? 1 : 0;
     stepLAT = 1;
-    mState->stepPending = false;
-    mState->lastStepTicks = timeTicks;
-    mState->stepped = true;
+    stepPending = false;
+    lastStepTicks = timeTicks;
+    stepped = true;
   }
 }

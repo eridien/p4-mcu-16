@@ -53,16 +53,16 @@ void i2cInit() {
 
 // all words are big-endian
 void setSendBytesInt() {
-  switch (mState->nextStateSpecialVal) {
+  switch (nextStateSpecialVal) {
     case 0:
-      i2cSendBytes[0] = (MCU_VERSION | mState->stateByte);
-      i2cSendBytes[1] =  mState->curPos >> 8;
-      i2cSendBytes[2] =  mState->curPos & 0x00ff;   
+      i2cSendBytes[0] = (MCU_VERSION | stateByte);
+      i2cSendBytes[1] =  curPos >> 8;
+      i2cSendBytes[2] =  curPos & 0x00ff;   
       break;
     case 1: 
       i2cSendBytes[0] = (MCU_VERSION | AUX_RES_BIT | 0);
-      i2cSendBytes[1] = mState->homeTestPos >> 8;
-      i2cSendBytes[2] = mState->homeTestPos & 0x00ff;
+      i2cSendBytes[1] = homeTestPos >> 8;
+      i2cSendBytes[2] = homeTestPos & 0x00ff;
       break;        
     case 2: 
       i2cSendBytes[0] = (MCU_VERSION | AUX_RES_BIT | 1);
@@ -72,7 +72,7 @@ void setSendBytesInt() {
     default: 
       setErrorInt(CMD_DATA_ERROR);
   }
-  mState->nextStateSpecialVal = 0;
+  nextStateSpecialVal = 0;
 }
 
 volatile uint8 motIdxInPacket;
@@ -102,7 +102,7 @@ void __attribute__ ((interrupt,shadow,auto_psv)) _MSSP1Interrupt(void) {
           // done receiving -- total length of recv is stored in first byte
           i2cRecvBytes[0] = i2cRecvBytesPtr-1;
           // tell event loop that data is available
-          mState->haveCommand = true;
+          haveCommand = true;
         } else {
           // sent last byte of status packet
           if(i2cSendBytes[0] & ERR_CODE) {
@@ -128,7 +128,7 @@ void __attribute__ ((interrupt,shadow,auto_psv)) _MSSP1Interrupt(void) {
     else {
       if(!RdNotWrite) {
         // received byte (i2c write to slave)
-        if (mState->haveCommand != 0) {
+        if (haveCommand != 0) {
             // last command for this motor not handled yet by event loop
             setErrorInt(OVERFLOW_ERROR);
         }
