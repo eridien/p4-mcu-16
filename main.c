@@ -1,15 +1,17 @@
 
-//  git commit -a -m "p4-mcu-16" && git push origin master && echo && git status
+//  wsl
+//  cd /mnt/c/Users/19493/dev/p4-mcu-16
+//  git commit -a -m "" && git push origin master && echo && git status
 
-// PIC24F16KL402 Configuration Bit Settings
+// PIC24F16KL401 Configuration Bit Settings
 
 // FBS
 #pragma config BWRP = OFF               // Boot Segment Write Protect (Disabled)
 #pragma config BSS = OFF                // Boot segment Protect (No boot program flash segment)
 
 // FGS
-#pragma config GWRP = OFF               // General Segment Write Protect (General segment may be written)
-#pragma config GCP = OFF                // General Segment Code Protect (No Protection)
+#pragma config GWRP = OFF               // General Segment Flash Write Protect (General segment may be written)
+#pragma config GSS0 = OFF               // General Segment Code Protect (No Protection)
 
 // FOSCSEL
 #pragma config FNOSC = FRCPLL           // Oscillator Select (Fast RC Oscillator with Postscaler and PLL Module (FRCDIV+PLL))
@@ -18,9 +20,9 @@
 #pragma config IESO = OFF               // Internal External Switch Over bit (Internal External Switchover mode enabled (Two-speed Start-up enabled))
 
 // FOSC
-#pragma config POSCMOD = NONE           // Primary Oscillator Configuration bits (none selected)
-#pragma config OSCIOFNC = IO            // CLKO Enable Configuration bit (Port I/O enabled (CLKO disabled))
-#pragma config POSCFREQ = HS            // Primary Oscillator Frequency Range Configuration bits (Primary oscillator/external clock input frequency greater than 8MHz)
+#pragma config POSCMD = NONE            // Primary Oscillator Mode (Primary oscillator disabled)
+#pragma config OSCIOFNC = ON            // CLKO Pin I/O Function (Port I/O enabled (CLKO disabled))
+#pragma config POSCFREQ = HS            // Primary Oscillator Frequency Range (Primary Oscillator/External Clock frequency >8MHz)
 #pragma config SOSCSEL = SOSCHP         // SOSC Power Selection Configuration bits (Secondary Oscillator configured for high-power operation)
 #pragma config FCKSM = CSDCMD           // Clock Switching and Monitor Selection (Both Clock Switching and Fail-safe Clock Monitor are disabled)
 
@@ -37,7 +39,7 @@
 #pragma config BORV = V18               // Brown-out Reset Voltage bits (Brown-out Reset set to lowest voltage (1.8V))
 #pragma config MCLRE = ON               // MCLR Pin Enable bit (RA5 input pin disabled, MCLR pin enabled)
 // FICD
-#pragma config ICS = PGx2               // ICD Pin Placement Select bits (EMUC/EMUD share PGC2/PGD2)
+#pragma config ICS = PGx1               // ICD Pin Placement Select (EMUC/EMUD share PGC1/PGD1)
 
 #include <xc.h>
 #include "types.h"
@@ -59,12 +61,12 @@ int main(void) {
  tp1TRIS = 0;
  tp2TRIS = 0;
  tp3TRIS = 0;
- tp4TRIS = 0;
+// tp4TRIS = 0;   part of i2c
  
  tp1LAT  = 0;
  tp2LAT  = 0;
  tp3LAT  = 0;
- tp4LAT  = 0;
+// tp4LAT  = 0;
 #endif
     
   i2cInit();

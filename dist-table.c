@@ -5,7 +5,7 @@
 #include "pins.h"
 
 // table is 8 (accel) by 256 (speed) entries
-// entry is dist of decelleration
+// entry is dist of deceleration
 
 // speed resolution of 3.2 mm/sec (assuming 40 steps/mm)
 // 256 speed values (6.4 to 819.2 mm/sec)

@@ -11,11 +11,11 @@
 #define IDPORT    _RB1     // 0: mcuA, 1: mcuB, only valid at startup
 
 #define dirTRIS   _TRISA6
-#define ms1TRIS   _TRISA7
+//#define ms1TRIS   _TRISA7
 #define ms2TRIS   _TRISB7
 
 #define dirLAT    _LATA6
-#define ms1LAT    _LATA7
+//#define ms1LAT    _LATA7
 #define ms2LAT    _LATB7
 
 #define resetATRIS _TRISB15
@@ -40,12 +40,12 @@
 
 #define stepATRIS  _TRISB1
 #define stepBTRIS  _TRISB2
-#define stepCTRIS  _TRISB3
+//#define stepCTRIS  _TRISB3
 #define stepDTRIS  _TRISA2
 
 #define stepALAT   _LATB1
 #define stepBLAT   _LATB2
-#define stepCLAT   _LATB3
+//#define stepCLAT   _LATB3
 #define stepDLAT   _LATA2
 
 #define stepAPORT  PORTB
@@ -81,12 +81,12 @@
 #define limALAT   _LATA0
 #define limBLAT   _LATA1
 #define limCLAT   _LATB0
-#define limDLAT   _LATB6
+//#define limDLAT   _LATB6
 
 #define limATRIS  _TRISA0
 #define limBTRIS  _TRISA1
 #define limCTRIS  _TRISB0
-#define limDTRIS  _TRISB6
+//#define limDTRIS  _TRISB6
 
 #define limAPORT  PORTA
 #define limBPORT  PORTB
@@ -102,12 +102,12 @@
 #define tp1TRIS faultATRIS
 #define tp2TRIS faultBTRIS
 #define tp3TRIS faultCTRIS
-#define tp4TRIS faultDTRIS
+//#define tp4TRIS faultDTRIS
 
 #define tp1LAT  faultALAT
 #define tp2LAT  faultBLAT
 #define tp3LAT  faultCLAT
-#define tp4LAT  faultDLAT
+//#define tp4LAT  faultDLAT
 
 #define dbg10 tp1LAT = 0;
 #define dbg11 tp1LAT = 1;

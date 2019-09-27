@@ -34,7 +34,7 @@ struct motorSettings *sv;
 
 void motorInit() {
  dirTRIS = 0;
-  ms1TRIS = 0;
+//  ms1TRIS = 0;
   ms2TRIS = 0;
   
   resetALAT  = 0; // start with reset on
@@ -48,12 +48,12 @@ void motorInit() {
   
   stepALAT   = 1; 
   stepBLAT   = 1; 
-  stepCLAT   = 1; 
+//  stepCLAT   = 1; 
   stepDLAT   = 1; 
 
   stepATRIS  = 0;
   stepBTRIS  = 0;
-  stepCTRIS  = 0;
+//  stepCTRIS  = 0;
   stepDTRIS  = 0;
 
 #ifndef DEBUG
@@ -66,7 +66,7 @@ void motorInit() {
   limATRIS = 1; // limit switch input
   limBTRIS = 1; 
   limCTRIS = 1; 
-  limDTRIS = 1; 
+//  limDTRIS = 1; 
 
   uint8 motIdx;
   for (motIdx = 0; motIdx < NUM_MOTORS; motIdx++) {
@@ -312,7 +312,7 @@ void processCommand() {
           case 0: limALAT = 0; limATRIS = (rb[2] & 0x01); break;
           case 2: limBLAT = 0; limBTRIS = (rb[2] & 0x01); break;
           case 4: limCLAT = 0; limCTRIS = (rb[2] & 0x01); break;
-          case 6: limDLAT = 0; limDTRIS = (rb[2] & 0x01); break;
+//          case 6: limDLAT = 0; limDTRIS = (rb[2] & 0x01); break;
         }
       } else {
         setError(CMD_DATA_ERROR);
@@ -357,7 +357,7 @@ void __attribute__((interrupt, shadow, auto_psv)) _T1Interrupt(void) {
         setErrorInt(motIdx, STEP_NOT_DONE_ERROR);
         return;
       }
-      ms1LAT = ((p->ustep & 0x01) ? 1 : 0);
+//      ms1LAT = ((p->ustep & 0x01) ? 1 : 0);
       ms2LAT = ((p->ustep & 0x02) ? 1 : 0);
       dirLAT =   p->curDir        ? 1 : 0;
       setBiStepHiInt(motIdx);
