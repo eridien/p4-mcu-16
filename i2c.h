@@ -17,8 +17,6 @@
 #define NotStretch    SSP1CON1bits.CKP
 #define I2C_SSPOV     SSP1CON1bits.SSPOV
 
-#define I2C_ADDR_MASK 0xf8 // motor idx in d2-d1 (d1-d0 in real addr)
-
 // motor is bottom 2 bits in addr
 // addr is set based on ID input pins
 extern uint8 mcuLoc;
@@ -30,10 +28,12 @@ extern uint8 mcuLoc;
 #define MCU_X    (mcuLoc == LOC_X   )
 #define MCU_HEAD (mcuLoc == LOC_HEAD)
 
+#define I2C_ADDR_MASK 0xf8 // motor idx in d2-d1 (d1-d0 in real addr)
+
 extern uint8 i2cAddrBase; 
-#define I2C_ADDR_BASE   0x08  // real addr: 0x04+motor (base mcu)
-#define I2C_ADDR_X   0x10  // real addr: 0x08+motor (   X mcu)
-#define I2C_ADDR_HEAD   0x18  // real addr: 0x0c+motor (head mcu)
+#define I2C_ADDR_BASE   0x18  // real addr: 0x14+motor (base mcu)
+#define I2C_ADDR_X      0x20  // real addr: 0x18+motor (   X mcu)
+#define I2C_ADDR_HEAD   0x28  // real addr: 0x1c+motor (head mcu)
 
 extern volatile uint8 i2cRecvBytes[RECV_BUF_SIZE + 1];
 extern volatile uint8 i2cRecvBytesPtr;

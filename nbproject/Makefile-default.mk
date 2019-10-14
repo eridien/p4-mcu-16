@@ -70,7 +70,6 @@ OBJECTFILES=${OBJECTDIR}/clock.o ${OBJECTDIR}/home.o ${OBJECTDIR}/i2c.o ${OBJECT
 SOURCEFILES=clock.c home.c i2c.c main.c motor.c move.c state.c stop.c dist-table.c
 
 
-
 CFLAGS=
 ASFLAGS=
 LDLIBSOPTIONS=
@@ -263,11 +262,3 @@ endif
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/default
 	${RM} -r dist/default
-
-# Enable dependency checking
-.dep.inc: .depcheck-impl
-
-DEPFILES=$(shell mplabwildcard ${POSSIBLE_DEPFILES})
-ifneq (${DEPFILES},)
-include ${DEPFILES}
-endif

@@ -15,13 +15,13 @@ struct motorSettings {
   uint16 accelIdx;
   uint16 speed;
   uint16 jerk;
+   int16 homePos;        // value to set cur pos after homing
    int16 minPos;
    int16 maxPos;
   uint16 homingDir;
   uint16 homingSpeed;
   uint16 homingBackUpSpeed;
    int16 homeOfs;
-   int16 homePos;        // value to set cur pos after homing
   uint16 limitSwCtl;     // limit sw assignment
   uint16 backlashWid;    // backlash dead width in steps
   uint16 maxUstep;       // maximum ustep (0 for 5-wire unipolar stepper, else 3)

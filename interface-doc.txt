@@ -1,7 +1,7 @@
     
-  eridien P3 motor controller MCU interface (version 0)
+  eridien P4 motor controller MCU interface (version 0)
   -----------------------------------------------------
-  (this file should match eridien/mcu-motors respository for MCU version)
+  (this file should match eridien/p4-mcu-16 respository)
 
   Each MCU is an I2C slave.  Each motor in each MCU has its own I2C address.
   Each motor state is independent (except for error which stops entire mcu).
